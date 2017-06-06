@@ -125,12 +125,13 @@ def objective_plot(betas, lamb=1, x=x_train, y=y_train, save_file=''):
     objs = np.zeros(num_points)
     for i in range(0, num_points):
         objs[i] = objective(betas[i, :], lamb, x=x, y=y)
-    fig, ax = plt.subplots()
-    ax.plot(range(1, num_points + 1), objs, c='blue', label='SVM Fast Gradient')
+    fig = plt.figure(figsize=(4, 4), dpi=150)
+    plt.plot(range(1, num_points + 1), objs, color="darkmagenta", linewidth=1.8,
+             linestyle="dashed", marker="o", label='SVM Fast Gradient')
     plt.xlabel("Iteration")
     plt.ylabel("Objective Function Value")
     plt.title("Objective Values with Lambda = "+str(lamb))
-    ax.legend(loc="upper right")
+    plt.legend(loc="upper right")
     if not save_file:
         plt.show()
     else:
