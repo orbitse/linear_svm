@@ -1,4 +1,7 @@
-import matplotlib.pyplot as plt
+"""
+This file allows a user to run an experimental comparison between my linear Support Vector Machine
+    (SVM) implementation and scikit-learn’s SVM on the Spam data set.
+"""
 import numpy as np
 import pandas as pd
 import scipy.linalg
@@ -6,21 +9,23 @@ import sklearn.preprocessing
 import sklearn.svm
 
 # Get the data
-spam = pd.read_table('https://statweb.stanford.edu/~tibs/ElemStatLearn/datasets/spam.data',
-                     sep=' ', header=None)
-test_indicator = pd.read_table('https://statweb.stanford.edu/~tibs/ElemStatLearn/datasets/spam.traintest',
-                               sep=' ', header=None)
+SPAM = pd.read_table(
+    'https://statweb.stanford.edu/~tibs/ElemStatLearn/datasets/spam.data',
+    sep=' ', header=None)
+TEST_INDICATOR = pd.read_table(
+    'https://statweb.stanford.edu/~tibs/ElemStatLearn/datasets/spam.traintest',
+    sep=' ', header=None)
 
-x = np.asarray(spam)[:, 0:-1]
-y = np.asarray(spam)[:, -1]*2 - 1  # Convert to +/- 1
-test_indicator = np.array(test_indicator).T[0]
+X_DATA = np.asarray(SPAM)[:, 0:-1]
+Y_DATA = np.asarray(SPAM)[:, -1]*2 - 1  # Convert to +/- 1
+TEST_INDICATOR = np.array(TEST_INDICATOR).T[0]
 
 # Divide the data into train, test sets
-x_train = x[test_indicator == 0, :]
-x_test = x[test_indicator == 1, :]
-y_train = y[test_indicator == 0]
+x_train = X_DATA[TEST_INDICATOR == 0, :]
+x_test = X_DATA[TEST_INDICATOR == 1, :]
+y_train = Y_DATA[TEST_INDICATOR == 0]
 y_train = y_train.ravel()
-y_test = y[test_indicator == 1]
+y_test = Y_DATA[TEST_INDICATOR == 1]
 print("x_train shape is", x_train.shape, "y_train shape is", y_train.shape)
 
 # Standardize Data
@@ -32,18 +37,19 @@ x_test = scaler.transform(x_test)
 # Number of samples and the dimension of each sample
 n_train = len(y_train)
 n_test = len(y_test)
-d = np.size(x, 1)
+d_feat = np.size(x_data, 1)
 
 lamb = 1
 denom = 1/len(y_train)*x_train.T.dot(x_train)
-step_init = 1/(scipy.linalg.eigh(denom, eigvals=(d-1, d-1), eigvals_only=True)[0]+lamb)
+step_init = 1/(scipy.linalg.eigh(denom, eigvals=(d_feat-1, d_feat-1), eigvals_only=True)[0]+lamb)
 beta_init = np.zeros(d).ravel()
-print("n_train is", n_train, " and  d is", d, " and  beta_init.shape is", beta_init.shape)
+print("n_train is", n_train, " and  d is", d_feat,
+      " and  beta_init.shape is", beta_init.shape)
 
 
 def computegrad(beta, lamb=1, x=x_train, y=y_train):
     """
-       Computes and returns the gradient for the linear SVM function.
+       This function computes and returns the gradient for the linear SVM function.
        :param beta: array of model coefficients
        :param lamb: int regularization parameter
        :param x: array of features data
@@ -75,7 +81,7 @@ def bt_search(beta, lamb=1, step=1, max_iter=50, alpha=0.5, gamma=0.8, x=x_train
     norm_grad_beta = np.linalg.norm(grad_beta)
     found_step_size = 0
     iter = 0
-    while(found_step_size == 0 and iter < max_iter):
+    while found_step_size == 0 and iter < max_iter:
         if objective(beta - step * grad_beta, lamb, x, y) <\
                 (objective(beta, lamb, x, y) - alpha * step * norm_grad_beta):
             found_step_size = 1
@@ -89,7 +95,7 @@ def bt_search(beta, lamb=1, step=1, max_iter=50, alpha=0.5, gamma=0.8, x=x_train
 
 
 def mylinearsvm(init_step=step_init, max_iter=300, init_beta=beta_init,
-                                init_theta=np.zeros(d), lamb=1, x=x_train, y=y_train):
+                init_theta=np.zeros(d), lamb=1, x=x_train, y=y_train):
     """
     The function implements the fast gradient algorithm to train the linear support
         vector machine with the squared hinge loss
@@ -103,7 +109,7 @@ def mylinearsvm(init_step=step_init, max_iter=300, init_beta=beta_init,
     while iter < max_iter:
         # call backtracking line search function: bt_earch
         step_size = bt_search(beta, lamb, step=step_size, max_iter=50, alpha=0.5,
-                                                  gamma=0.8, x=x, y=y)
+                              gamma=0.8, x=x, y=y)
         #print("Iteration {:4d}. In mylinearsvm, the step size is{:01.12f}".format(iter, step_size))
         beta = theta - step_size * computegrad(theta, lamb, x=x, y=y)
         # Store all of the places we step to
